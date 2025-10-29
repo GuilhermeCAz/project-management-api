@@ -3,14 +3,13 @@
 This module defines configuration classes for different environments.
 """
 
+import logging
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
-
-
 basedir = Path(__file__).resolve().parent
 
 
@@ -19,7 +18,6 @@ class Config:
 
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False
 
 
 class DevelopmentConfig(Config):
@@ -30,7 +28,7 @@ class DevelopmentConfig(Config):
         'DATABASE_URL',
         f'sqlite:///{basedir / "project_management.db"}',
     )
-    SQLALCHEMY_ECHO = True
+    logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
 
 
 class ProductionConfig(Config):
