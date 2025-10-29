@@ -51,7 +51,6 @@ class Project(db.Model):  # type: ignore[name-defined, misc]
         nullable=False,
     )
 
-    # Relationships
     tasks = db.relationship(
         'Task',
         backref='project',

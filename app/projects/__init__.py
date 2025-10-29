@@ -8,4 +8,4 @@ from flask import Blueprint
 
 project_bp = Blueprint('projects', __name__, url_prefix='/projects')
 
-from . import routes  # noqa: E402, F401
+from . import routes

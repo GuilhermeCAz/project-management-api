@@ -7,11 +7,11 @@ This module defines all endpoints for project CRUD operations.
 from flask import Response, jsonify, request
 
 from app import db
-from app.middleware import manager_required
 from app.projects.models import Project
 from app.projects.validators import validate_project_data
 from app.users.models import User
 
+from ..middleware.auth import manager_required  # noqa: TID252
 from . import project_bp
 
 
@@ -46,12 +46,10 @@ def create_project() -> tuple[Response, int]:
     """
     data = request.get_json()
 
-    # Validate input
     is_valid, error = validate_project_data(data)
     if not is_valid:
         return jsonify({'error': error}), 400
 
-    # Verify user exists
     user = db.session.get(User, data['user_id'])
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -93,12 +91,10 @@ def get_projects() -> tuple[Response, int]:
     try:
         query = Project.query
 
-        # Filter by user_id if provided
         user_id_filter = request.args.get('user_id', type=int)
         if user_id_filter:
             query = query.filter_by(user_id=user_id_filter)
 
-        # Pagination
         limit = request.args.get('limit', type=int)
         offset = request.args.get('offset', type=int, default=0)
 
@@ -190,13 +186,11 @@ def update_project(project_id: int) -> tuple[Response, int]:
 
     data = request.get_json()
 
-    # Validate input
     is_valid, error = validate_project_data(data, is_update=True)
     if not is_valid:
         return jsonify({'error': error}), 400
 
     try:
-        # Update fields if provided
         if 'name' in data:
             project.name = data['name']
 

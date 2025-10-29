@@ -98,7 +98,6 @@ def get_project_tasks(project_id: int) -> tuple[Response, int]:
     Example:
         GET /projects/1/tasks?status=pending&limit=10
     """
-    # Verify project exists
     project = db.session.get(Project, project_id)
     if not project:
         return jsonify({'error': 'Project not found'}), 404
@@ -106,7 +105,6 @@ def get_project_tasks(project_id: int) -> tuple[Response, int]:
     try:
         query = Task.query.filter_by(project_id=project_id)
 
-        # Filter by status if provided
         status_filter = request.args.get('status')
         if status_filter:
             if status_filter not in Task.VALID_STATUSES:
@@ -120,7 +118,6 @@ def get_project_tasks(project_id: int) -> tuple[Response, int]:
                 ), 400
             query = query.filter_by(status=status_filter)
 
-        # Pagination
         limit = request.args.get('limit', type=int)
         offset = request.args.get('offset', type=int, default=0)
 
@@ -204,13 +201,11 @@ def update_task(task_id: int) -> tuple[Response, int]:
 
     data = request.get_json()
 
-    # Validate input
     is_valid, error = validate_task_data(data, is_update=True)
     if not is_valid:
         return jsonify({'error': error}), 400
 
     try:
-        # Update fields if provided
         if 'title' in data:
             task.title = data['title']
 

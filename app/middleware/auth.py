@@ -1,30 +1,29 @@
 """
 Authentication and authorization middleware.
 
-This module provides decorators for route protection based on user roles.
+This module provides decorators for route protection based on user roles
+using JWT tokens for secure authentication.
 """
 
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from flask import jsonify, request
+from flask import g, jsonify, request
 
-from app import db
+from app.auth.services import AuthService
+from app.users.models import User
 
 
-def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
+def token_required(f: Callable[..., Any]) -> Callable[..., Any]:
     """
-    Decorator to require manager role for accessing a route.
+    Decorator to require valid JWT token for accessing a route.
 
-    This decorator checks if the user_id in the request corresponds
-    to a manager user. Routes that affect the database should be
-    protected with this decorator.
+    This decorator validates the JWT token from the Authorization header
+    and makes the current user available to the route function.
 
-    The user_id can be provided via:
-    - Request JSON body: {'user_id': 1}
-    - Query parameter: ?user_id=1
-    - HTTP Header: X-User-Id: 1
+    Expected header format:
+    Authorization: Bearer <jwt_token>
 
     Args:
         f (function): The route function to decorate
@@ -33,7 +32,66 @@ def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
         function: The decorated function
 
     Raises:
-        400: If user_id is not provided or invalid
+        401: If token is missing, invalid, or expired
+        404: If user is not found
+
+    Example:
+        >>> @app.route('/profile', methods=['GET'])
+        >>> @token_required
+        >>> def get_profile():
+        >>>     user = get_current_user()
+        >>>     return jsonify(user.to_dict())
+    """
+
+    @wraps(f)
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+        auth_header = request.headers.get('Authorization')
+
+        if not auth_header:
+            return jsonify({'error': 'Authorization header is required'}), 401
+
+        if not auth_header.startswith('Bearer '):
+            return jsonify(
+                {'error': 'Authorization header must start with "Bearer "'},
+            ), 401
+
+        try:
+            token = auth_header.split(' ')[1]
+        except IndexError:
+            return jsonify(
+                {'error': 'Invalid authorization header format'},
+            ), 401
+
+        user = AuthService.get_user_from_token(token)
+
+        if not user:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+
+        g.current_user = user
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
+    """
+    Decorator to require manager role for accessing a route.
+
+    This decorator first validates the JWT token and then checks
+    if the authenticated user has manager privileges.
+
+    Expected header format:
+    Authorization: Bearer <jwt_token>
+
+    Args:
+        f (function): The route function to decorate
+
+    Returns:
+        function: The decorated function
+
+    Raises:
+        401: If token is missing, invalid, or expired
         403: If user is not a manager
         404: If user is not found
 
@@ -42,27 +100,35 @@ def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
         >>> @manager_required
         >>> def create_project():
         >>>     # Only managers can access this
+        >>>     user = get_current_user()
         >>>     pass
     """
 
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
-        from app.users.models import User, UserType  # noqa: PLC0415
+        auth_header = request.headers.get('Authorization')
 
-        user_id = get_current_user_id()
+        if not auth_header:
+            return jsonify({'error': 'Authorization header is required'}), 401
 
-        if not user_id:
+        if not auth_header.startswith('Bearer '):
             return jsonify(
-                {'error': 'user_id is required for this operation'},
-            ), 400
+                {'error': 'Authorization header must start with "Bearer "'},
+            ), 401
 
-        # Verify user exists and is a manager
-        user = db.session.get(User, user_id)
+        try:
+            token = auth_header.split(' ')[1]
+        except IndexError:
+            return jsonify(
+                {'error': 'Invalid authorization header format'},
+            ), 401
+
+        user = AuthService.get_user_from_token(token)
 
         if not user:
-            return jsonify({'error': 'User not found'}), 404
+            return jsonify({'error': 'Invalid or expired token'}), 401
 
-        if user.user_type != UserType.MANAGER:
+        if not AuthService.is_manager(user):
             return jsonify(
                 {
                     'error': 'Access denied. Manager role required.',
@@ -70,43 +136,48 @@ def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
                 },
             ), 403
 
+        g.current_user = user
+
         return f(*args, **kwargs)
 
     return decorated_function
 
 
-def get_current_user_id() -> int | None:
+def get_current_user() -> User | None:
     """
-    Extract user_id from the current request.
+    Get the current authenticated user from the request context.
 
-    Checks multiple sources in order:
-    1. JSON body
-    2. Query parameters
-    3. HTTP headers
+    This function should be called within routes that are protected
+    by @token_required or @manager_required decorators.
 
     Returns:
-        int: The user ID from the request, or None if not found
+        User: The current authenticated user, or None if not authenticated
 
     Example:
-        >>> user_id = get_current_user_id()
-        >>> if user_id:
-        >>>     user = User.query.get(user_id)
+        >>> @token_required
+        >>> def get_profile():
+        >>>     user = get_current_user()
+        >>>     return jsonify(user.to_dict())
     """
-    user_id = None
+    return getattr(g, 'current_user', None)
 
-    if request.is_json and request.json:
-        user_id = request.json.get('user_id')
 
-    if not user_id:
-        user_id = request.args.get('user_id')
+def get_current_user_id() -> int | None:
+    """
+    Get the current authenticated user's ID from the request context.
 
-    if not user_id:
-        user_id = request.headers.get('X-User-Id')
+    This function should be called within routes that are protected
+    by @token_required or @manager_required decorators.
 
-    if user_id:
-        try:
-            return int(user_id)
-        except (ValueError, TypeError):
-            return None
+    Returns:
+        int: The current user's ID, or None if not authenticated
 
-    return None
+    Example:
+        >>> @token_required
+        >>> def get_user_projects():
+        >>>     user_id = get_current_user_id()
+        >>>     projects = Project.query.filter_by(user_id=user_id).all()
+        >>>     return jsonify([p.to_dict() for p in projects])
+    """
+    user = get_current_user()
+    return user.id if user else None

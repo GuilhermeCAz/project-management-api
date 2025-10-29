@@ -7,6 +7,8 @@ This module defines the User model and related enums.
 from datetime import UTC, datetime
 from enum import Enum
 
+import bcrypt
+
 from app import db
 
 
@@ -41,6 +43,7 @@ class User(db.Model):  # type: ignore[name-defined, misc]
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(128), nullable=False)
     user_type = db.Column(
         db.Enum(UserType),
         nullable=False,
@@ -58,7 +61,6 @@ class User(db.Model):  # type: ignore[name-defined, misc]
         nullable=False,
     )
 
-    # Relationships
     projects = db.relationship(
         'Project',
         backref='owner',
@@ -92,6 +94,34 @@ class User(db.Model):  # type: ignore[name-defined, misc]
 
         return result
 
+    def set_password(self, password: str) -> None:
+        """
+        Hash and set the user's password.
+
+        Args:
+            password: Plain text password to hash
+        """
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(
+            password.encode('utf-8'),
+            salt,
+        ).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        """
+        Check if the provided password matches the stored hash.
+
+        Args:
+            password: Plain text password to verify
+
+        Returns:
+            bool: True if password matches, False otherwise
+        """
+        return bcrypt.checkpw(
+            password.encode('utf-8'),
+            self.password_hash.encode('utf-8'),
+        )
+
     def __repr__(self) -> str:
-        """String representation of User."""
+        """Return string representation of the user."""
         return f'<User {self.name} ({self.user_type.value})>'
