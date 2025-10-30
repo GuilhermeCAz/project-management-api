@@ -1,3 +1,18 @@
+"""Initialize the Flask application package.
+
+This package sets up the Flask app, including configuration, logging,
+database initialization, and blueprint registration.
+
+Modules:
+    auth: Authentication routes and logic.
+    users: User management routes.
+    projects: Project-related routes.
+    tasks: Task management routes.
+
+Attributes:
+    db (SQLAlchemy): The SQLAlchemy database instance shared across the app.
+"""
+
 import os
 
 from flask import Flask
@@ -20,10 +35,12 @@ def create_app() -> Flask:
 
     db.init_app(app)
 
+    from app.auth.routes import auth_bp
     from app.projects import project_bp
     from app.tasks import task_bp
     from app.users import user_bp
 
+    app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(project_bp)
     app.register_blueprint(task_bp)
