@@ -1,6 +1,4 @@
-"""
-Authentication data validators.
-"""
+"""Authentication data validators."""
 
 import re
 

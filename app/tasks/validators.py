@@ -1,3 +1,5 @@
+"""Task data validators."""
+
 from app.tasks.models import Task
 
 MAX_TASK_TITLE_LEN = 200

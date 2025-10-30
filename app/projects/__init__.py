@@ -1,5 +1,4 @@
-"""
-Projects module package.
+"""Projects module package.
 
 Defines the projects Blueprint and wires route handlers.
 """

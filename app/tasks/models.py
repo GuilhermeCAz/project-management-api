@@ -1,18 +1,16 @@
-"""
-Task model definition.
+"""Task model definition.
 
 This module defines the Task model.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import ClassVar
 
 from app import db
 
 
 class Task(db.Model):  # type: ignore[name-defined, misc]
-    """
-    Task model representing a task within a project.
+    """Task model representing a task within a project.
 
     Each task belongs to a project and has a status indicating its completion
     state.
@@ -50,19 +48,18 @@ class Task(db.Model):  # type: ignore[name-defined, misc]
     )
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
     def to_dict(self) -> dict[str, object]:
-        """
-        Convert task object to dictionary representation.
+        """Convert task object to dictionary representation.
 
         Returns:
             dict: Dictionary representation of the task

@@ -1,5 +1,4 @@
-"""
-Authentication and authorization middleware.
+"""Authentication and authorization middleware.
 
 This module provides decorators for route protection based on user roles
 using JWT tokens for secure authentication.
@@ -11,13 +10,11 @@ from typing import Any
 
 from flask import g, jsonify, request
 
-from app.auth.services import AuthService
 from app.users.models import User
 
 
 def token_required(f: Callable[..., Any]) -> Callable[..., Any]:
-    """
-    Decorator to require valid JWT token for accessing a route.
+    """Decorator to require valid JWT token for accessing a route.
 
     This decorator validates the JWT token from the Authorization header
     and makes the current user available to the route function.
@@ -62,6 +59,8 @@ def token_required(f: Callable[..., Any]) -> Callable[..., Any]:
                 {'error': 'Invalid authorization header format'},
             ), 401
 
+        from app.auth.services import AuthService  # noqa: PLC0415
+
         user = AuthService.get_user_from_token(token)
 
         if not user:
@@ -75,8 +74,7 @@ def token_required(f: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
-    """
-    Decorator to require manager role for accessing a route.
+    """Decorator to require manager role for accessing a route.
 
     This decorator first validates the JWT token and then checks
     if the authenticated user has manager privileges.
@@ -123,6 +121,8 @@ def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
                 {'error': 'Invalid authorization header format'},
             ), 401
 
+        from app.auth.services import AuthService  # noqa: PLC0415
+
         user = AuthService.get_user_from_token(token)
 
         if not user:
@@ -144,8 +144,7 @@ def manager_required(f: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def get_current_user() -> User | None:
-    """
-    Get the current authenticated user from the request context.
+    """Get the current authenticated user from the request context.
 
     This function should be called within routes that are protected
     by @token_required or @manager_required decorators.
@@ -163,8 +162,7 @@ def get_current_user() -> User | None:
 
 
 def get_current_user_id() -> int | None:
-    """
-    Get the current authenticated user's ID from the request context.
+    """Get the current authenticated user's ID from the request context.
 
     This function should be called within routes that are protected
     by @token_required or @manager_required decorators.

@@ -1,5 +1,4 @@
-"""
-User management routes.
+"""User management routes.
 
 This module defines all endpoints for user CRUD operations.
 """
@@ -8,7 +7,7 @@ from flask import Response, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 from app import db
-from app.middleware import manager_required
+from app.middleware.auth import manager_required, token_required
 from app.users.models import User, UserType
 from app.users.validators import validate_user_data
 
@@ -18,8 +17,7 @@ from . import user_bp
 @user_bp.route('', methods=['POST'])
 @manager_required
 def create_user() -> tuple[Response, int]:
-    """
-    Create a new user.
+    """Create a new user.
 
     Requires manager role. Expects JSON body with user data.
 
@@ -57,6 +55,8 @@ def create_user() -> tuple[Response, int]:
         user.name = data['name']
         user.email = data['email']
         user.user_type = UserType(data['user_type'])
+        # Set a default password for users created by managers
+        user.set_password('defaultpassword123')
 
         db.session.add(user)
         db.session.commit()
@@ -73,9 +73,9 @@ def create_user() -> tuple[Response, int]:
 
 
 @user_bp.route('', methods=['GET'])
+@token_required
 def get_users() -> tuple[Response, int]:
-    """
-    Retrieve a list of all users.
+    """Retrieve a list of all users.
 
     Query Parameters:
         user_type (optional): Filter by user type (manager/employee)
@@ -126,9 +126,9 @@ def get_users() -> tuple[Response, int]:
 
 
 @user_bp.route('/<int:user_id>', methods=['GET'])
+@token_required
 def get_user(user_id: int) -> tuple[Response, int]:
-    """
-    Retrieve a specific user by ID.
+    """Retrieve a specific user by ID.
 
     Args:
         user_id (int): User ID
@@ -158,8 +158,7 @@ def get_user(user_id: int) -> tuple[Response, int]:
 @user_bp.route('/<int:user_id>', methods=['PUT'])
 @manager_required
 def update_user(user_id: int) -> tuple[Response, int]:
-    """
-    Update an existing user.
+    """Update an existing user.
 
     Requires manager role.
 
@@ -225,8 +224,7 @@ def update_user(user_id: int) -> tuple[Response, int]:
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
 @manager_required
 def delete_user(user_id: int) -> tuple[Response, int]:
-    """
-    Delete a user.
+    """Delete a user.
 
     Requires manager role. This will also delete all projects and tasks
     owned by this user (cascade delete).

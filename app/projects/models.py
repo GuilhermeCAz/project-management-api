@@ -1,5 +1,4 @@
-"""
-Project model definition.
+"""Project model definition.
 
 This module defines the Project model.
 """
@@ -10,8 +9,7 @@ from app import db
 
 
 class Project(db.Model):  # type: ignore[name-defined, misc]
-    """
-    Project model representing a project in the system.
+    """Project model representing a project in the system.
 
     Each project belongs to a user and can have multiple tasks.
 
@@ -59,8 +57,7 @@ class Project(db.Model):  # type: ignore[name-defined, misc]
     )
 
     def to_dict(self, *, include_tasks: bool = False) -> dict[str, object]:
-        """
-        Convert project object to dictionary representation.
+        """Convert project object to dictionary representation.
 
         Args:
             include_tasks (bool): Whether to include tasks in the response

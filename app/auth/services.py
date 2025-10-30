@@ -1,5 +1,4 @@
-"""
-Authentication service using JWT tokens.
+"""Authentication service using JWT tokens.
 
 This module provides secure authentication functionality using
 JSON Web Tokens (JWT) for stateless authentication.
@@ -29,8 +28,7 @@ class AuthService:
 
     @staticmethod
     def generate_access_token(user: User) -> str:
-        """
-        Generate a JWT access token for the user.
+        """Generate a JWT access token for the user.
 
         Args:
             user: User instance to generate token for
@@ -56,8 +54,7 @@ class AuthService:
 
     @staticmethod
     def generate_refresh_token(user: User) -> str:
-        """
-        Generate a JWT refresh token for the user.
+        """Generate a JWT refresh token for the user.
 
         Args:
             user: User instance to generate token for
@@ -85,8 +82,7 @@ class AuthService:
         token: str,
         token_type: TokenType = TokenType.ACCESS,
     ) -> dict[str, Any] | None:
-        """
-        Verify and decode a JWT token.
+        """Verify and decode a JWT token.
 
         Args:
             token: JWT token to verify
@@ -118,8 +114,7 @@ class AuthService:
 
     @staticmethod
     def authenticate_user(email: str, password: str) -> User | None:
-        """
-        Authenticate a user with email and password.
+        """Authenticate a user with email and password.
 
         Args:
             email: User's email address
@@ -137,8 +132,7 @@ class AuthService:
 
     @staticmethod
     def get_user_from_token(token: str) -> User | None:
-        """
-        Get user instance from a valid JWT token.
+        """Get user instance from a valid JWT token.
 
         Args:
         payload = AuthService.verify_token(token, TokenType.ACCESS)
@@ -155,12 +149,11 @@ class AuthService:
         if not user_id:
             return None
 
-        return User.query.get(user_id) if user_id is not None else None
+        return db.session.get(User, user_id) if user_id is not None else None
 
     @staticmethod
     def is_manager(user: User) -> bool:
-        """
-        Check if user has manager privileges.
+        """Check if user has manager privileges.
 
         Args:
             user: User instance to check
@@ -168,13 +161,11 @@ class AuthService:
         Returns:
             bool: True if user is a manager, False otherwise
         """
-
         return bool(user.user_type == UserType.MANAGER)
 
     @staticmethod
     def register_user(data: dict[str, Any]) -> tuple[dict[str, Any], int]:
-        """
-        Register a new user with password.
+        """Register a new user with password.
 
         Args:
             data: User registration data dictionary including password

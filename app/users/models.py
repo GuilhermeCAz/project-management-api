@@ -1,5 +1,4 @@
-"""
-User model definition.
+"""User model definition.
 
 This module defines the User model and related enums.
 """
@@ -20,8 +19,7 @@ class UserType(Enum):
 
 
 class User(db.Model):  # type: ignore[name-defined, misc]
-    """
-    User model representing system users.
+    """User model representing system users.
 
     A user can be either a manager or an employee. Managers have
     additional privileges to modify database records.
@@ -69,8 +67,7 @@ class User(db.Model):  # type: ignore[name-defined, misc]
     )
 
     def to_dict(self, *, include_projects: bool = False) -> dict[str, object]:
-        """
-        Convert user object to dictionary representation.
+        """Convert user object to dictionary representation.
 
         Args:
             include_projects (bool): Whether to include user's projects
@@ -95,8 +92,7 @@ class User(db.Model):  # type: ignore[name-defined, misc]
         return result
 
     def set_password(self, password: str) -> None:
-        """
-        Hash and set the user's password.
+        """Hash and set the user's password.
 
         Args:
             password: Plain text password to hash
@@ -108,8 +104,7 @@ class User(db.Model):  # type: ignore[name-defined, misc]
         ).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
-        """
-        Check if the provided password matches the stored hash.
+        """Check if the provided password matches the stored hash.
 
         Args:
             password: Plain text password to verify

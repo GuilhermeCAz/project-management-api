@@ -1,5 +1,4 @@
-"""
-Users module package.
+"""Users module package.
 
 Defines the users Blueprint and wires route handlers.
 """

@@ -1,3 +1,5 @@
+"""User data validators."""
+
 import re
 
 from loguru import logger
@@ -51,8 +53,8 @@ def validate_user_data(
     *,
     is_update: bool = False,
 ) -> tuple[bool, str | None]:
-    """
-    Validate user creation/update payload.
+    """Validate user creation/update payload.
+
     Returns (is_valid, error_message_or_none).
     """
     err = _check_is_dict(data)

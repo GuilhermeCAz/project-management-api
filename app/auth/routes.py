@@ -1,22 +1,22 @@
-"""
-Authentication views for login, logout, and token management.
+"""Authentication views for login, logout, and token management.
 
 This module provides endpoints for user authentication using JWT tokens.
 """
 
 from flask import Blueprint, Response, jsonify, request
 
+from app import db
 from app.auth.services import AuthService, TokenType
 from app.auth.validators import validate_login_data
+from app.middleware.auth import token_required
 from app.users.models import User
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 @auth_bp.route('/login', methods=['POST'])
-def login() -> tuple[Response, int]:
-    """
-    Authenticate user and return JWT tokens.
+def login() -> tuple[Response, int]:  # noqa: PLR0911
+    """Authenticate user and return JWT tokens.
 
     Expected JSON payload:
     {
@@ -28,13 +28,18 @@ def login() -> tuple[Response, int]:
         JSON response with access and refresh tokens or error message
     """
     try:
-        validation_error = validate_login_data(request.json)
-        if validation_error:
-            return jsonify({'error': validation_error}), 400
+        # Try to get JSON data, handle invalid JSON
+        try:
+            data = request.get_json(force=True)
+        except Exception:
+            return jsonify({'error': 'Invalid JSON format'}), 400
 
-        data = request.json
         if data is None:
             return jsonify({'error': 'Invalid request data'}), 400
+
+        validation_error = validate_login_data(data)
+        if validation_error:
+            return jsonify({'error': validation_error}), 400
 
         email = data['email']
         password = data['password']
@@ -60,14 +65,15 @@ def login() -> tuple[Response, int]:
             },
         ), 200
 
+    except KeyError as e:
+        return jsonify({'error': f'Missing required field: {e!s}'}), 400
     except Exception as e:
         return jsonify({'error': f'Login failed: {e!s}'}), 500
 
 
 @auth_bp.route('/register', methods=['POST'])
 def register() -> tuple[Response, int]:
-    """
-    Register a new user account.
+    """Register a new user account.
 
     Expected JSON payload:
     {
@@ -93,8 +99,7 @@ def register() -> tuple[Response, int]:
 
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh_token() -> tuple[Response, int]:
-    """
-    Refresh access token using refresh token.
+    """Refresh access token using refresh token.
 
     Expected JSON payload:
     {
@@ -120,7 +125,7 @@ def refresh_token() -> tuple[Response, int]:
 
         user_id = payload.get('user_id')
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
 
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -139,9 +144,9 @@ def refresh_token() -> tuple[Response, int]:
 
 
 @auth_bp.route('/logout', methods=['POST'])
+@token_required
 def logout() -> tuple[Response, int]:
-    """
-    Logout user (client-side token removal).
+    """Logout user (client-side token removal).
 
     Note: Since JWT tokens are stateless, logout is handled client-side
     by removing the tokens. This endpoint serves as a confirmation.
@@ -154,8 +159,7 @@ def logout() -> tuple[Response, int]:
 
 @auth_bp.route('/verify', methods=['GET'])
 def verify_token() -> tuple[Response, int]:
-    """
-    Verify if the provided access token is valid.
+    """Verify if the provided access token is valid.
 
     Expected header:
     Authorization: Bearer <access_token>

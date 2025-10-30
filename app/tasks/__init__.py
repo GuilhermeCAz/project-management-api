@@ -1,5 +1,4 @@
-"""
-Tasks module package.
+"""Tasks module package.
 
 Defines the tasks Blueprint and wires route handlers.
 """

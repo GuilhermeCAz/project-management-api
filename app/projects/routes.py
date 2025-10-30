@@ -1,5 +1,4 @@
-"""
-Project management routes.
+"""Project management routes.
 
 This module defines all endpoints for project CRUD operations.
 """
@@ -18,8 +17,7 @@ from . import project_bp
 @project_bp.route('', methods=['POST'])
 @manager_required
 def create_project() -> tuple[Response, int]:
-    """
-    Create a new project.
+    """Create a new project.
 
     Requires manager role.
 
@@ -73,8 +71,7 @@ def create_project() -> tuple[Response, int]:
 
 @project_bp.route('', methods=['GET'])
 def get_projects() -> tuple[Response, int]:
-    """
-    Retrieve a list of all projects.
+    """Retrieve a list of all projects.
 
     Query Parameters:
         user_id (optional): Filter by owner user ID
@@ -122,8 +119,7 @@ def get_projects() -> tuple[Response, int]:
 
 @project_bp.route('/<int:project_id>', methods=['GET'])
 def get_project(project_id: int) -> tuple[Response, int]:
-    """
-    Retrieve a specific project by ID.
+    """Retrieve a specific project by ID.
 
     Args:
         project_id (int): Project ID
@@ -151,8 +147,7 @@ def get_project(project_id: int) -> tuple[Response, int]:
 @project_bp.route('/<int:project_id>', methods=['PUT'])
 @manager_required
 def update_project(project_id: int) -> tuple[Response, int]:
-    """
-    Update an existing project.
+    """Update an existing project.
 
     Requires manager role.
 
@@ -209,8 +204,7 @@ def update_project(project_id: int) -> tuple[Response, int]:
 @project_bp.route('/<int:project_id>', methods=['DELETE'])
 @manager_required
 def delete_project(project_id: int) -> tuple[Response, int]:
-    """
-    Delete a project.
+    """Delete a project.
 
     Requires manager role. This will also delete all tasks
     belonging to this project (cascade delete).
