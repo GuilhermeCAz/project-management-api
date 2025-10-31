@@ -19,6 +19,13 @@ from app.users.models import User, UserType
 
 
 class TokenType(Enum):
+    """Enumeration of JWT token types used by the authentication service.
+
+    Attributes:
+        ACCESS: Short-lived token used to access protected resources.
+        REFRESH: Long-lived token used to obtain new access tokens.
+    """
+
     ACCESS = 'access'
     REFRESH = 'refresh'
 
@@ -132,16 +139,15 @@ class AuthService:
 
     @staticmethod
     def get_user_from_token(token: str) -> User | None:
-        """Get user instance from a valid JWT token.
+        """Retrieve a user instance from a valid JWT access token.
 
         Args:
-        payload = AuthService.verify_token(token, TokenType.ACCESS)
+            token (str): Encoded JWT access token.
 
         Returns:
-            User: User instance if token is valid, None otherwise
+            User | None: User instance if token is valid, otherwise None.
         """
         payload = AuthService.verify_token(token, TokenType.ACCESS)
-
         if not payload:
             return None
 

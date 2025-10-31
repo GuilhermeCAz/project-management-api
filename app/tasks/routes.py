@@ -335,8 +335,9 @@ def update_task(task_id: int) -> tuple[Response, int]:
 
         db.session.commit()
 
-        # Get the updated task to avoid DetachedInstanceError
         updated_task = db.session.get(Task, task_id)
+        if not updated_task:
+            return jsonify({'error': 'Task not found after update'}), 404
 
         return jsonify(updated_task.to_dict()), 200
 
