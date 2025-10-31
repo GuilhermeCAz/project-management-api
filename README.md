@@ -33,7 +33,7 @@ A robust and scalable RESTful API for project and task management, built with Fl
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/GuilhermeCAz/project-management-api.git
    cd project-management-api
    ```
 

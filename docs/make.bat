@@ -24,12 +24,46 @@ if errorlevel 9009 (
 )
 
 if "%1" == "" goto help
+if "%1" == "help" goto help
+if "%1" == "clean" goto clean
+if "%1" == "html" goto html
+if "%1" == "view" goto view
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 goto end
 
 :help
 %SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+goto end
+
+:clean
+echo.Cleaning build directory...
+if exist %BUILDDIR% (
+	rmdir /s /q %BUILDDIR%
+	echo.Build directory cleaned.
+) else (
+	echo.Build directory does not exist.
+)
+goto end
+
+:html
+echo.Building HTML documentation...
+%SPHINXBUILD% -M html %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+if errorlevel 1 (
+	echo.
+	echo.Build failed!
+	exit /b 1
+)
+echo.
+echo.Build finished. The HTML pages are in %BUILDDIR%\html
+goto end
+
+:view
+call :html
+if errorlevel 1 goto end
+echo.Opening documentation in browser...
+start "" "%BUILDDIR%\html\index.html"
+goto end
 
 :end
 popd
